@@ -23,14 +23,13 @@ struct nttp_t{
 
     constexpr nttp_t(
         char const (&format)[fl_],
-        char const* file_name = std::source_location::current().file_name(),
-        std::uint_least32_t line = std::source_location::current().line(),
-        std::uint_least32_t column = std::source_location::current().column()
+        std::source_location loc = std::source_location::current()
     )
-    : line_(line), column_(column)
+    : line_(loc.line()), column_(loc.column())
     {
         std::copy_n(format, fl_, format_);
         format_[fl_] = 0;
+        char const* file_name = loc.file_name();
         auto fnl = std::min(fnl_, std::char_traits<char>::length(file_name));
         std::copy_n(file_name, fnl, file_name_);
         file_name_[fnl] = 0;
@@ -75,7 +74,7 @@ struct event {
         auto s = std::format(nttp.format_, std::forward<Args>(args)...);
         std::printf(
             "[%s] %s:%d:%d: %s\n",
-            // Some function must use storage for it to be constructed.
+            // Someone must use `storage_` for it to be constructed.
             SEVERITY_NAME[storage_.severity_],
             nttp.file_name_,
             nttp.line_,
