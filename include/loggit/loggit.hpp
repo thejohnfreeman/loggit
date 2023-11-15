@@ -66,11 +66,10 @@ struct LOGGIT_EXPORT storage {
 
 LOGGIT_EXPORT void print_legend();
 
-template <severity_t severity, nttp_t nttp>
+template <severity_t severity, nttp_t nttp, typename... Args>
 struct event {
     static storage const storage_;
-    template <typename... Args>
-    event(Args&&... args) {
+    static void log(Args&&... args) {
         auto s = std::format(nttp.format_, std::forward<Args>(args)...);
         std::printf(
             "[%s] %s:%d:%d: %s\n",
@@ -84,18 +83,20 @@ struct event {
     }
 };
 
-template <severity_t severity, nttp_t nttp>
-storage const event<severity, nttp>::storage_{severity, nttp.file_name_, nttp.line_, nttp.column_, nttp.format_};
-
-template <nttp_t nttp>
-struct info : public event<INFO, nttp> {
-    using event<INFO, nttp>::event;
+template <severity_t severity, nttp_t nttp, typename... Args>
+storage const event<severity, nttp, Args...>::storage_{
+    severity, nttp.file_name_, nttp.line_, nttp.column_, nttp.format_
 };
 
-template <nttp_t nttp>
-struct error : public event<ERROR, nttp> {
-    using event<ERROR, nttp>::event;
-};
+template <nttp_t nttp, typename... Args>
+void info(Args&&... args) {
+    event<INFO, nttp, Args...>::log(std::forward<Args>(args)...);
+}
+
+template <nttp_t nttp, typename... Args>
+void error(Args&&... args) {
+    event<ERROR, nttp, Args...>::log(std::forward<Args>(args)...);
+}
 
 }
 
